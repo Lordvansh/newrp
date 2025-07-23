@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
-import uuid
 import re
 import json
 import random
@@ -166,17 +165,24 @@ class StripeChecker:
                 "card": f"{card_number}|{exp_month}|{exp_year}|{cvv}"
             }
 
-@app.route('/check', methods=['POST'])
+@app.route('/check', methods=['GET', 'POST'])
 def check():
-    cc = request.form.get('cc') or request.json.get('cc')
-    proxy = request.form.get('proxy') or request.json.get('proxy')
-    site = request.form.get('site') or request.json.get('site')
+    if request.method == 'POST':
+        cc = request.form.get('cc') or (request.json and request.json.get('cc'))
+        proxy = request.form.get('proxy') or (request.json and request.json.get('proxy'))
+        site = request.form.get('site') or (request.json and request.json.get('site'))
+    else:
+        cc = request.args.get('cc')
+        proxy = request.args.get('proxy')
+        site = request.args.get('site')
+
     if not (cc and site):
         return jsonify({"error": "Missing required parameters: cc, site"}), 400
     try:
         number, month, year, cvv = cc.strip().split("|")
     except Exception:
         return jsonify({"error": "Invalid card format. Use number|month|year|cvv"}), 400
+
     gmail = random_gmail()
     passwd = random_password()
     checker = StripeChecker(site, gmail, passwd, proxy)
