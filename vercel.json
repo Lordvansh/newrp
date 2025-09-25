@@ -1,0 +1,8 @@
+{
+  "builds": [
+    { "src": "autostr.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "autostr.py" }
+  ]
+}
